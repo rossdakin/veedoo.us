@@ -176,14 +176,57 @@ body.game-active:before {
   font-size: 26px;
   line-height: 1;
 }
-.secret-flag {
+.game-launcher {
   position: fixed;
-  right: 12px;
-  bottom: 12px;
+  right: 16px;
+  bottom: 16px;
   z-index: 1774;
-  width: 48px;
-  height: 34px;
-  border: 3px outset #FFFFFF;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  animation: launcher-bob 1.1s ease-in-out infinite;
+}
+@keyframes launcher-bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-9px); }
+}
+.game-launcher .cta {
+  font-family: "Impact", "Arial Black", sans-serif;
+  font-size: 17px;
+  letter-spacing: 1px;
+  color: #FFFF00;
+  background: #CC0000;
+  border: 3px ridge #FFFFFF;
+  padding: 5px 10px;
+  box-shadow: 3px 3px 0 #000000;
+  white-space: nowrap;
+  text-align: center;
+  line-height: 1.1;
+  text-shadow: 1px 1px 0 #000000;
+  animation: cta-flash 0.7s step-end infinite;
+}
+.game-launcher .cta small {
+  display: block;
+  font-size: 11px;
+  color: #FFFFFF;
+  letter-spacing: 0;
+}
+@keyframes cta-flash {
+  0%, 60% { background: #CC0000; color: #FFFF00; }
+  61%, 100% { background: #0000AA; color: #FFFFFF; }
+}
+.secret-flag {
+  display: block;
+  position: relative;
+  width: 108px;
+  height: 74px;
+  border: 4px outset #FFFFFF;
   background:
     linear-gradient(#0033AA 0 54%, transparent 54%),
     repeating-linear-gradient(
@@ -193,30 +236,36 @@ body.game-active:before {
       #FFFFFF 4px,
       #FFFFFF 8px
     );
-  box-shadow: 3px 3px 0 #000000;
-  cursor: pointer;
+  animation: flag-glow 0.9s ease-in-out infinite alternate;
+}
+@keyframes flag-glow {
+  from { box-shadow: 4px 4px 0 #000000, 0 0 0 3px #0000AA, 0 0 12px 3px #FFEA00; }
+  to   { box-shadow: 4px 4px 0 #000000, 0 0 0 3px #CC0000, 0 0 30px 11px #FFEA00; }
 }
 .secret-flag:before {
   content: "";
   position: absolute;
-  left: 5px;
-  top: 5px;
-  width: 3px;
-  height: 3px;
+  left: 10px;
+  top: 8px;
+  width: 5px;
+  height: 5px;
   background: #FFFFFF;
   box-shadow:
-    8px 0 #FFFFFF,
     16px 0 #FFFFFF,
-    4px 6px #FFFFFF,
-    12px 6px #FFFFFF,
-    20px 6px #FFFFFF,
-    0 12px #FFFFFF,
-    8px 12px #FFFFFF,
-    16px 12px #FFFFFF;
+    32px 0 #FFFFFF,
+    8px 11px #FFFFFF,
+    24px 11px #FFFFFF,
+    40px 11px #FFFFFF,
+    0 22px #FFFFFF,
+    16px 22px #FFFFFF,
+    32px 22px #FFFFFF;
 }
-.secret-flag:hover,
-.secret-flag:focus {
+.game-launcher:hover .secret-flag,
+.game-launcher:focus .secret-flag {
   outline: 4px solid #FFFF00;
+}
+body.game-active .game-launcher {
+  display: none;
 }
 @media (max-width: 720px) {
   .flag-text { font-size: 38px; }
@@ -319,11 +368,15 @@ body.game-active:before {
     opacity: 0.9;
     pointer-events: auto;
   }
-  .secret-flag {
+  .game-launcher {
     right: 8px;
     bottom: 8px;
-    width: 42px;
-    height: 30px;
+  }
+  .game-launcher .cta { font-size: 14px; }
+  .game-launcher .cta small { font-size: 10px; }
+  .secret-flag {
+    width: 88px;
+    height: 60px;
   }
 }
 </style>
@@ -337,7 +390,10 @@ body.game-active:before {
 <font face="Impact" size="6" color="#FFFFFF">&#127482;&#127480; WARNING: THIS PAGE CONTAINS 100&#37; PURE AMERICAN FREEDOM &#8212; VIEWER DISCRETION IS PATRIOTIC &#127482;&#127480;</font>
 </marquee>
 
-<button class="secret-flag" id="gameSecretFlag" type="button" aria-label="Activate Veedoo Liberty Blaster"></button>
+<button class="game-launcher" id="gameSecretFlag" type="button" aria-label="Play the Veedoo Liberty Blaster 8-bit game">
+<span class="cta">&#9654; PLAY THE GAME! &#9664;<small>&#9660; VEEDOO LIBERTY BLASTER &#9660;</small></span>
+<span class="secret-flag" aria-hidden="true"></span>
+</button>
 
 <p class="flag-text">
 <font color="#FF0000">V</font><font color="#FFFFFF">E</font><font color="#0000FF">E</font><font color="#FF0000">D</font><font color="#FFFFFF">O</font><font color="#0000FF">O</font>
