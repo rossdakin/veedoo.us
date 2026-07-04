@@ -139,6 +139,7 @@ body.game-active:before {
   image-rendering: pixelated;
   border-top: 6px solid #FFFFFF;
   border-bottom: 6px solid #CC0000;
+  box-sizing: border-box;
 }
 .game-hud {
   display: grid;
@@ -285,10 +286,10 @@ body.game-active .game-launcher {
     overflow: hidden;
   }
   .game-shell {
-    left: 8px;
-    top: 8px;
-    width: calc(100vw - 16px);
-    height: calc(100vh - 16px);
+    left: 6px;
+    top: 6px;
+    width: calc(var(--veedoo-game-vw, 100dvw) - 12px);
+    height: calc(var(--veedoo-game-vh, 100dvh) - 12px);
     max-width: none;
     max-height: none;
     margin: 0;
@@ -301,24 +302,24 @@ body.game-active .game-launcher {
     display: block;
   }
   .game-title {
-    height: 26px;
+    height: clamp(22px, 7vh, 28px);
     overflow: hidden;
-    padding: 3px 104px 3px 6px;
-    font-size: 20px;
-    line-height: 26px;
+    padding: 2px 96px 2px 6px;
+    font-size: clamp(15px, 4vh, 20px);
+    line-height: clamp(22px, 7vh, 28px);
     white-space: nowrap;
   }
   #freedomGame {
-    width: min(100%, calc((100vh - 46px) * 16 / 7));
+    width: min(100%, calc((var(--veedoo-game-vh, 100dvh) - 112px) * 16 / 7));
     height: auto;
-    max-height: calc(100% - 32px);
+    max-height: calc(var(--veedoo-game-vh, 100dvh) - 112px);
     border-top-width: 3px;
     border-bottom-width: 3px;
   }
   .game-hud {
     position: absolute;
     left: 8px;
-    top: 38px;
+    top: clamp(32px, 10vh, 42px);
     z-index: 2;
     grid-template-columns: repeat(4, auto);
     width: auto;
@@ -336,7 +337,7 @@ body.game-active .game-launcher {
   .game-actions {
     position: absolute;
     right: 8px;
-    top: 38px;
+    top: clamp(32px, 10vh, 42px);
     z-index: 3;
     gap: 4px;
     padding: 0;
@@ -352,7 +353,7 @@ body.game-active .game-launcher {
     position: absolute;
     left: 0;
     right: 0;
-    bottom: 8px;
+    bottom: max(6px, env(safe-area-inset-bottom));
     z-index: 3;
     justify-content: space-between;
     padding: 0 10px;
@@ -360,11 +361,11 @@ body.game-active .game-launcher {
     pointer-events: none;
   }
   .game-pad .freedom-btn {
-    min-width: 56px;
-    min-height: 44px;
-    padding: 6px 10px;
+    min-width: clamp(48px, 12vw, 64px);
+    min-height: clamp(38px, 12vh, 48px);
+    padding: 5px 9px;
     border-width: 3px;
-    font-size: 24px;
+    font-size: clamp(19px, 6vh, 24px);
     opacity: 0.9;
     pointer-events: auto;
   }
@@ -563,6 +564,7 @@ function eagle() {
   if (!canvas || !canvas.getContext) { return; }
 
   var ctx = canvas.getContext("2d");
+  var gameShell = document.getElementById("veedooGameSection");
   var width = canvas.width;
   var height = canvas.height;
   var groundY = 350;
@@ -652,12 +654,50 @@ function eagle() {
     return /\bgame-active\b/.test(document.body.className);
   }
 
+  function viewportSize() {
+    var viewport = window.visualViewport;
+    return {
+      width: Math.floor((viewport && viewport.width) || window.innerWidth || document.documentElement.clientWidth || width),
+      height: Math.floor((viewport && viewport.height) || window.innerHeight || document.documentElement.clientHeight || height)
+    };
+  }
+
+  function compactLandscape(size) {
+    return size.width > size.height && size.height <= 520;
+  }
+
+  function fitGameLayout() {
+    var size = viewportSize();
+    document.documentElement.style.setProperty("--veedoo-game-vw", size.width + "px");
+    document.documentElement.style.setProperty("--veedoo-game-vh", size.height + "px");
+
+    canvas.style.width = "";
+    canvas.style.height = "";
+    canvas.style.marginTop = "";
+
+    if (!gameShell || !gameVisible() || !compactLandscape(size)) { return; }
+
+    var ratio = width / height;
+    var titleReserve = Math.min(Math.max(size.height * 0.08, 26), 34);
+    var controlReserve = Math.min(Math.max(size.height * 0.16, 48), 64);
+    var maxWidth = Math.max(260, size.width - 18);
+    var maxHeight = Math.max(118, size.height - titleReserve - controlReserve - 24);
+    var fittedWidth = Math.min(maxWidth, maxHeight * ratio);
+    var fittedHeight = fittedWidth / ratio;
+
+    canvas.style.width = Math.floor(fittedWidth) + "px";
+    canvas.style.height = Math.floor(fittedHeight) + "px";
+    canvas.style.marginTop = Math.max(0, Math.floor((maxHeight - fittedHeight) / 2)) + "px";
+  }
+
   function showGame() {
     if (!gameVisible()) {
       document.body.className += (document.body.className ? " " : "") + "game-active";
     }
+    fitGameLayout();
     startGame();
     if (canvas.focus) { canvas.focus(); }
+    requestAnimationFrame(fitGameLayout);
   }
 
   function hideGame() {
@@ -670,6 +710,7 @@ function eagle() {
     keys.shoot = false;
     game.running = false;
     game.message = "START TO PLAY";
+    fitGameLayout();
     updateHud();
   }
 
@@ -1146,7 +1187,17 @@ function eagle() {
   closeBtn.addEventListener("click", hideGame);
   secretFlag.addEventListener("click", showGame);
   canvas.addEventListener("click", queueShot);
+  window.addEventListener("resize", fitGameLayout);
+  window.addEventListener("orientationchange", function () {
+    fitGameLayout();
+    setTimeout(fitGameLayout, 180);
+  });
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener("resize", fitGameLayout);
+    window.visualViewport.addEventListener("scroll", fitGameLayout);
+  }
 
+  fitGameLayout();
   resetGame(false);
   requestAnimationFrame(frame);
 })();
